@@ -23,23 +23,23 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     dob = db.Column(db.Date())
-    updated_at = db.column(db.DateTime())
+    updated_at = db.Column(db.DateTime()) # TODO forgot about this
 
     def __init__(self, name, dob):
         self.name = name
         self.dob = dob
+        self.updated_at = datetime.now()
 
     def __repr__(self):
-        return '%s/%s/%s' % (self.id, self.name, self.dob)
+        #return '%s/%s/%s' % (self.id, self.name, self.dob)
+        return '%s/%s/%s/%s' % (self.id, self.name, self.dob, self.updated_at)
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # if request.form:
-    #     print(request.form)
     return render_template('home.html')
 
-# Todo routes
+# TODO: error handling
 # Create User POST
 @app.route('/create', methods = ['POST'])
 def create_user():
@@ -52,16 +52,74 @@ def create_user():
             new_user = User(data['name'],data['dob'])
             db.session.add(new_user)
             db.session.commit()
-            return data
+            return jsonify({'status':'successful', 'data':data})
             
     return render_template('create_user.html')
-# Read all users 
-# Read any single user
-@app.route('/<id>')
-def id(id):
-    return id
-# Update Name
-# Delete a user via id
+
+
+@app.route('/read', methods = ['GET'])
+def read_users():
+    print('here')
+    if request.method == 'GET':
+        data = User.query.order_by(User.id).all()
+        data_json = []
+        for i in range(len(data)):
+            print(data[i])
+            data_dict = {
+                'id': str(data[i]).split('/')[0],
+                'name': str(data[i]).split('/')[1],
+                'dob': str(data[i]).split('/')[2],
+                'updated_at': str(data[i]).split('/')[3],
+            }
+            data_json.append(data_dict)
+        return jsonify(data_json)
+
+@app.route('/<id>', methods = ['GET', 'DELETE', 'PUT'])
+def id_handler(id):
+    if request.method == 'GET':
+        data = User.query.get(id)
+        data_dict = {
+            'id': str(data).split('/')[0],
+            'name': str(data).split('/')[1],
+            'dob': str(data).split('/')[2]
+        }
+        return jsonify(data_dict)
+    elif request.method == 'DELETE':
+        del_data = User.query.filter_by(id=id).first()
+        db.session.delete(del_data)
+        db.session.commit()
+        return jsonify({'status': 'user ID: '+id+' has been deleted'})
+    elif request.method == 'PUT':
+        if request.is_json:
+            json_data = request.get_json()
+            new_name =  json_data['name']
+            db_data = User.query.filter_by(id=id).first()
+            if db_data.name == None:
+                return jsonify({'error':'no record found for id'})
+            db_data.name = new_name
+            db_data.updated_at = date.now()
+            db.session.commit()
+            return jsonify({'status': 'user ID: '+id+' has been updated'})
+        else:
+            return jsonify({'error':'request not in JSON'})
+
+# implement a list action. 
+# List should take in a number n as a GET parameter that returns n youngest customers ordered by date of birth.
+@app.route('/youngest/<n>', methods = ['GET'])
+def handle_n_youngest(n):
+    if request.method == 'GET':
+        data = User.query.order_by(User.dob).limit(n).all()
+        data_json = []
+        print(data)
+        for i in range(len(data)):
+            data_dict = {
+                'id': str(data[i]).split('/')[0],
+                'name': str(data[i]).split('/')[1],
+                'dob': str(data[i]).split('/')[2]
+            }
+            data_json.append(data_dict)
+        return jsonify(data_json) # TODO not working... using a sorting algo or something else
+
 
 if __name__ == '__main__':
     app.run(debug=True)
