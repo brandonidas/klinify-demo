@@ -108,18 +108,26 @@ def id_handler(id):
 @app.route('/youngest/<n>', methods = ['GET'])
 def handle_n_youngest(n):
     if request.method == 'GET':
-        data = User.query.order_by(User.dob).limit(n).all()
+        data = User.query.order_by(User.id).all()
         data_json = []
         print(data)
+
+        # TODO rework with lambda
         for i in range(len(data)):
             data_dict = {
                 'id': str(data[i]).split('/')[0],
                 'name': str(data[i]).split('/')[1],
-                'dob': str(data[i]).split('/')[2]
+                'dob': date_helper(str(data[i]).split('/')[2])
             }
             data_json.append(data_dict)
-        return jsonify(data_json) # TODO not working... using a sorting algo or something else
 
+        sorted_dicts = sorted(data_json , key=lambda k: k['dob'], reverse=False) 
+        return jsonify(sorted_dicts[-int(n):]) # TODO not working... using a sorting algo or something else
+
+
+def date_helper(date_string)->int:
+    return int(date_string.replace('-', ''))
+assert date_helper('2021-03-23') == 20210323
 
 if __name__ == '__main__':
     app.run(debug=True)
