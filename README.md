@@ -1,4 +1,4 @@
-# CRUD Flask API with PostgreSQL database and JWT authent
+# CRUD Flask API with PostgreSQL database and JWT authentication
 Originally a demo for Klinify candidacy. Now a general purpose portfolio project.
 
 TODO
