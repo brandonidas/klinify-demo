@@ -51,21 +51,16 @@ def token_required(f):
         token = None
 
         if 'x-access-tokens' in request.headers:
-            print("got token")
             token = request.headers['x-access-tokens']
 
         if not token:
-            print("not token")
             return jsonify({'message': 'a valid token is missing'})
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            print("try data")
-            print(data)
             current_admin = Admin.query.filter_by(
                 id=data['id']).first()
         except:
-            print("failed decode")
             return jsonify({'message': 'token is invalid'})
 
         return f(*args, **kwargs)
@@ -80,12 +75,8 @@ def login_user():
 
     admin = Admin.query.filter_by(name=auth.username).first()
 
-    if admin.password == auth.password:
-        print("here")
-        print(str(admin)) # TODO figure out how to use this in encode below
+    if admin.password == auth.password: # TODO use password hash
         token = jwt.encode({'id': admin.id, 'exp' : datetime.utcnow() + timedelta(minutes=2)}, app.config['SECRET_KEY']) 
-        print("here2")
-        #return jsonify({'token' :jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])}) 
         return jsonify({'token' : token}) 
     return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
 
