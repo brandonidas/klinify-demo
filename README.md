@@ -6,4 +6,6 @@ TODO
 - Security against JWT replay attacks
 - CI/CL with Github actions
 
+## Documentation
 
+Preamble: Admins and Users. Admins can CRUD Users. Admins have to be manually added to the DB.
