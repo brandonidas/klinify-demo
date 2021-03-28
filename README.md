@@ -1,2 +1,9 @@
-# klinify-demo
-Demo for Klinify Candidacy
+# CRUD Flask API with PostgreSQL database and JWT authent
+Originally a demo for Klinify candidacy. Now a general purpose portfolio project.
+
+TODO
+- Docker Image
+- Security against JWT replay attacks
+- CI/CL with Github actions
+
+
