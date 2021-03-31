@@ -4,6 +4,8 @@ Originally a demo for Klinify candidacy. Now a general purpose portfolio project
 TODO
 - Docker Image
 - Security against JWT replay attacks
+  - possibly via making each JWT only good for a single HTTP request
+  - or by using flask_kvsession, though I am not certain if this would still be JWT
 - CI/CL with Github actions
 
 ## Documentation
