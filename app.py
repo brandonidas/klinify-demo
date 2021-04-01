@@ -21,8 +21,8 @@ class Admin(db.Model):
     password = db.Column(db.String(255))
 
     def __init__(self, name, password):
-            self.name = name
-            self.password = password
+        self.name = name
+        self.password = password
 
     def __repr__(self):
         return '%s/%s/' % (self.id, self.name)
@@ -57,7 +57,8 @@ def token_required(f):
             return jsonify({'message': 'a valid token is missing'})
 
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            data = jwt.decode(
+                token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_admin = Admin.query.filter_by(
                 id=data['id']).first()
         except:
@@ -65,6 +66,11 @@ def token_required(f):
 
         return f(*args, **kwargs)
     return decorator
+
+
+@app.route('/', methods=['GET'])
+def index():
+    return "App is working"
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -75,26 +81,28 @@ def login_user():
 
     admin = Admin.query.filter_by(name=auth.username).first()
 
-    if admin.password == auth.password: # TODO use password hash
-        token = jwt.encode({'id': admin.id, 'exp' : datetime.utcnow() + timedelta(minutes=2)}, app.config['SECRET_KEY']) 
-        return jsonify({'token' : token}) 
+    if admin.password == auth.password:  # TODO use password hash
+        token = jwt.encode({'id': admin.id, 'exp': datetime.utcnow(
+        ) + timedelta(minutes=2)}, app.config['SECRET_KEY'])
+        return jsonify({'token': token})
     return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
 
-@app.route('/create', methods = ['POST'])
+
+@app.route('/create', methods=['POST'])
 @token_required
 def create_user():
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
-            new_user = User(data['name'],data['dob'])
+            new_user = User(data['name'], data['dob'])
             db.session.add(new_user)
             db.session.commit()
-            return jsonify({'status':'successful', 'data':data})
-            
-    return jsonify({'status':'unsuccessful'})
+            return jsonify({'status': 'successful', 'data': data})
+
+    return jsonify({'status': 'unsuccessful'})
 
 
-@app.route('/read_admins', methods = ['GET'])
+@app.route('/read_admins', methods=['GET'])
 @token_required
 def read_adminss():
     if request.method == 'GET':
@@ -107,9 +115,10 @@ def read_adminss():
             }
             data_json.append(data_dict)
         return jsonify(data_json)
-    return jsonify({'status':'unsuccessful'})
+    return jsonify({'status': 'unsuccessful'})
 
-@app.route('/read', methods = ['GET'])
+
+@app.route('/read', methods=['GET'])
 @token_required
 def read_users():
     if request.method == 'GET':
@@ -124,10 +133,10 @@ def read_users():
             }
             data_json.append(data_dict)
         return jsonify(data_json)
-    return jsonify({'status':'unsuccessful'})
+    return jsonify({'status': 'unsuccessful'})
 
 
-@app.route('/<id>', methods = ['GET', 'DELETE', 'PUT'])
+@app.route('/<id>', methods=['GET', 'DELETE', 'PUT'])
 @token_required
 def id_handler(id):
     if request.method == 'GET':
@@ -141,26 +150,27 @@ def id_handler(id):
     elif request.method == 'DELETE':
         del_data = User.query.filter_by(id=id).first()
         if del_data == None:
-            return jsonify({'error':'no record found for id'})
+            return jsonify({'error': 'no record found for id'})
         db.session.delete(del_data)
         db.session.commit()
         return jsonify({'status': 'user ID: '+id+' has been deleted'})
     elif request.method == 'PUT':
         if request.is_json:
             json_data = request.get_json()
-            new_name =  json_data['name']
+            new_name = json_data['name']
             db_data = User.query.filter_by(id=id).first()
             if db_data == None:
-                return jsonify({'error':'no record found for id'})
+                return jsonify({'error': 'no record found for id'})
             db_data.name = new_name
             db_data.updated_at = datetime.now()
             db.session.commit()
             return jsonify({'status': 'user ID: '+id+' has been updated'})
         else:
-            return jsonify({'error':'request not in JSON'})
-    return jsonify({'status':'unsuccessful'})
+            return jsonify({'error': 'request not in JSON'})
+    return jsonify({'status': 'unsuccessful'})
 
-@app.route('/youngest/<n>', methods = ['GET'])
+
+@app.route('/youngest/<n>', methods=['GET'])
 @token_required
 def handle_n_youngest(n):
     if request.method == 'GET':
@@ -168,7 +178,7 @@ def handle_n_youngest(n):
         data_json = []
         n = int(n)
         if n > len(data):
-            return jsonify({'status':'unsuccessful'})
+            return jsonify({'status': 'unsuccessful'})
 
         for i in range(len(data)):
             data_dict = {
@@ -178,13 +188,16 @@ def handle_n_youngest(n):
             }
             data_json.append(data_dict)
 
-        sorted_dicts = sorted(data_json , key=lambda k: k['dob'], reverse=False) 
+        sorted_dicts = sorted(data_json, key=lambda k: k['dob'], reverse=False)
         return jsonify(sorted_dicts[-int(n):])
-    return jsonify({'status':'unsuccessful'})
+    return jsonify({'status': 'unsuccessful'})
 
-def date_helper(date_string)->int:
+
+def date_helper(date_string):
     return int(date_string.replace('-', ''))
+
+
 assert date_helper('2021-03-23') == 20210323
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
