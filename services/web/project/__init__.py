@@ -9,21 +9,9 @@ import jwt
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///klinify_users'
 app.config['SECRET_KEY'] = 'demonstration'
 CORS(app)
 db = SQLAlchemy(app)
-
-
-# class User(db.Model):
-#     __tablename__ = "users"
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     email = db.Column(db.String(128), unique=True, nullable=False)
-#     active = db.Column(db.Boolean(), default=True, nullable=False)
-
-#     def __init__(self, email):
-#         self.email = email
 
 class Admin(db.Model):
     __tablename__ = "admin"
@@ -57,7 +45,7 @@ class User(db.Model):
 
 @app.route("/")
 def hello_world():
-    return jsonify(hello="world")
+    return jsonify(sanity=True)
 
 
 def token_required(f):
@@ -82,11 +70,6 @@ def token_required(f):
 
         return f(*args, **kwargs)
     return decorator
-
-
-@app.route('/', methods=['GET'])
-def index():
-    return "App is working"
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -135,7 +118,6 @@ def read_adminss():
 
 
 @app.route('/read', methods=['GET'])
-@token_required
 def read_users():
     if request.method == 'GET':
         data = User.query.order_by(User.id).all()
@@ -212,8 +194,6 @@ def handle_n_youngest(n):
 
 def date_helper(date_string):
     return int(date_string.replace('-', ''))
-
-
 assert date_helper('2021-03-23') == 20210323
 
 if __name__ == '__main__':
